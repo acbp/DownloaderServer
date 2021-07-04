@@ -1,140 +1,39 @@
-//Tutorial baseado em http://scotch.io/tutorials/javascript/build-a-restful-api-using-node-and-express-4
+const env = { PORT: process.env.PORT || 1337 }
+const http = require('http')
+const fs = require('fs')
 
+const ce = console.error;
+const cl = console.log;
 
-//Pacotes usados
-var express = require("express"); //importa express
-var app = express(); //defina app com express
-var bodyParser = require("body-parser");
-var url = require('url');
-var fs = require('fs');
-var http = require('http');
-var https = require('https');
-
-var port = process.env.PORT || 666; //configura porta
-
-
-//Permite usar o bodyParser 
-// para pegar o POST 
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
-app.use(bodyParser.json());
-
-
-/*
-SLAVE
-*/
-
-var dir= '../../../downloads/FromBot/',
-    working = false;
-var arr;
-var file;
-dir='./Download/';
-
-var call = function (response) {
-
-    console.log('Downloading...' );
-
-    response.on('data', function (data) {
-        file.write(data);
-    })
-        .on('end', function () {
-            file.end();
-
-            working = false;
-
-            console.log('Ok...Got this ! '+ Date.now());
-
-            if (arr) {
-                arr.shift();
-                
-                if (arr[0]) {
-                    
-                    while( arr[0] ==="" )
-                        arr.shift();
-
-                    console.log('proximo! '+ Date.now())
-
-                    file = fs.createWriteStream( dir+arr[0].substr(arr[0].lastIndexOf('/') + 1, arr[0].length));
-
-                    get(arr[0]);
-//                    console.log("ok2");
-                }
-  //              console.log("ok1");
-            }
-    //        console.log("ok0");
-        });
-	//console.log("ok");
+// Separar o conteúdo por queryParams ou por body
+const serverFn = ( q,r )=>{
+    
 }
 
-var get = function (url) {
+// subprocesso que fazer o download e escrita do arquivo no disco
+// todo: verificar se espaço no disco
+// todo: pegar arquivo
+// todo: escrever stream em disco
+const child = ()=>{}
 
-    name = url.substr(url.lastIndexOf('/') + 1, url.length);
+// fazer o download do elemento em disco
+const downloader = (url)=>{}
 
-    fs.exists(name, function (err, existe) {
+// escreve em disco
+const writer = ()=>{}
 
-        working = true;
-		console.log(1,err,'\n',existe);
+// access files on disk, can write/read
+const writeFile = ({name, content, flag = "w+", append = false}) => {
+    try{
+        if(!append) fs.writeFile(`./${name}`, content, { flag })
+        if(append) fs.appendFile(`./${name}`, content)
+    }
+    catch(e){
+        ce('[ writeFile ] err',{params:{name,flag,append}, err:e})
+    }
+}
 
-        if ( err )
-            working=false;
+// logger - cria arquivo, escreve na ultima linha o IP, tamanho e url pra cada ação
+const logger = ()=>{}
 
-        //else
-            file = fs.createWriteStream( dir+url.substr(url.lastIndexOf('/') + 1, url.length));
-	
-	if( url.match("https") )
-		https.get(url, call);
-	else
-        	http.get(url, call);
-        //console.log("ok ",dir+url.substr(url.lastIndexOf('/') + 1, url.length));
-    });
-};
-
-/* 
-SLAVE
-*/
-
-
-//////////////////////////////////////////
-// ROTAS DA API
-//////////////////////////////////////////
-var rota = express.Router(); // pega instância
-
-// middleware para usada para todas as rotas
-rota.use(function (req, rsp, nxt) {
-    var fail = true;
-    var add = req.url.indexOf('add') < 0;
-
-    if ( req.url.length - req.url.indexOf('add') <5 )
-        return rsp.json('Nope!' + Date.now() );
-		
-    console.log('add');
-
-    if (!arr)
-        arr = []
-
-    url = req.url.substr(5, req.url.length);
-
-    arr = arr.concat(url.split('!!!'));
-
-
-    if (!working)
-        get(arr[0]);
-
-    rsp.json('Ok! on '+ Date.now() );
-    console.log('ok');
-
-});
-
-
-//prefixa as rotas para /api
-app.use('/', rota);
-
-////////////////////////////////////////
-////////////////////////////////////////
-////////////////////////////////////////
-
-
-//inicia servidor
-app.listen(port);
-console.log("Ouvindo porta:[ " + port + " ] ♪");
+http.createServer(serverFn).listen(env.PORT,()=> console.log(`Running on ${env.PORT}`))
